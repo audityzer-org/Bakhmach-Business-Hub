@@ -92,3 +92,22 @@ GNU General Public License v3.0 - See `LICENSE` file for details.
 ---
 
 **Last Updated:** Dec 04, 2025 | **Status:** Foundation Phase | **Coordinator:** @romanchaa997
+
+
+### 5. **Consciousness-Inspired AGI** (`/consciousness`)
+
+**Theory & Philosophy:** Analysis of computationalism, emergent properties, and biological consciousness models. Mathematical formalization of integrated information theory (IIT) and self-referential systems.
+
+**AI Agents & Embodiment:** LLM-based agents with persistent memory, self-models, and causal loops through simulated/robotic environments. Multi-agent interactions for testing emergent properties.
+
+**Metrics & Monitoring:** Quantitative measures of consciousness-like properties: information integration, self-report consistency, agency continuity, model stability.
+
+**Ethics & Policy:** Frameworks for distinguishing tools from agent-like systems; guidelines for responsible deployment; regulation proposals.
+
+**Key Deliverables:**
+
+- Hybrid consciousness theory combining computational + emergent + biological perspectives
+- Proof-of-concept agents with self-models and embodiment
+- Metrics dashboard tracking consciousness-like properties
+- Ethics review board recommendations
+- Papers for NeurIPS/ICML, CogSci, AI & Society conferences
