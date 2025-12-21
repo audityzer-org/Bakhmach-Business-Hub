@@ -1,4 +1,4 @@
-# Next Week Plan (22–28 Dec 2025)
+# This Week Plan (22–28 Dec 2025)
 
 ## Infra & Privacy (Proton + Domains)
 - [ ] Create `docs/DNS.md` and verify SSL (Mon 22)
