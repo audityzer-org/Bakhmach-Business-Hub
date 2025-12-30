@@ -1,0 +1,180 @@
+# Alert Thresholds & Configuration
+
+# Consciousness Scores (0-100)
+consciousness:
+  integration:
+    critical: 0
+    warning: 50
+    optimal: 70
+  
+  wellbeing:
+    critical: 0
+    warning: 50
+    optimal: 70
+  
+  stability:
+    critical: 0
+    warning: 50
+    optimal: 75
+
+  mode:
+    halt: block_all_deployments
+    safe: require_review
+    fast: auto_merge_safe_changes
+
+# Backend (Code) Metrics
+backend:
+  coverage:
+    critical: 50
+    warning: 75
+    optimal: 85
+    unit: percent
+  
+  perf_regression:
+    critical: 20
+    warning: 5
+    optimal: 1
+    unit: percent
+  
+  tests_passed:
+    critical: false
+    warning: true
+    optimal: true
+
+# ML Metrics
+ml:
+  data_drift:
+    critical: 1.0
+    warning: 0.5
+    optimal: 0.1
+    unit: score
+  
+  model_accuracy:
+    critical: 0.7
+    warning: 0.85
+    optimal: 0.92
+    unit: decimal
+  
+  feature_store_ready:
+    critical: false
+    warning: true
+    optimal: true
+
+# Services Metrics
+services:
+  p95_latency_ms:
+    critical: 1000
+    warning: 300
+    optimal: 150
+    unit: milliseconds
+  
+  error_rate:
+    critical: 5.0
+    warning: 1.0
+    optimal: 0.1
+    unit: percent
+  
+  uptime:
+    critical: 95
+    warning: 99
+    optimal: 99.9
+    unit: percent
+
+# Alert Actions
+alerts:
+  integration_low:
+    condition: "integration_score < 50"
+    severity: WARNING
+    action: "require_manual_review"
+    notify: true
+  
+  wellbeing_low:
+    condition: "wellbeing_score < 50"
+    severity: WARNING
+    action: "reduce_automation"
+    notify: true
+  
+  stability_critical:
+    condition: "stability_score < 30"
+    severity: CRITICAL
+    action: "block_deployments"
+    notify: true
+  
+  mode_halt:
+    condition: "consciousness_mode == 'HALT'"
+    severity: CRITICAL
+    action: "halt_all_changes"
+    notify: true
+    escalate: true
+  
+  coverage_low:
+    condition: "code.coverage < 75"
+    severity: WARNING
+    action: "block_merge"
+    notify: false
+  
+  perf_regression:
+    condition: "code.perf_regression > 5"
+    severity: WARNING
+    action: "investigate"
+    notify: false
+  
+  data_drift_high:
+    condition: "ml.data_drift > 0.5"
+    severity: WARNING
+    action: "schedule_retrain"
+    notify: true
+  
+  model_degraded:
+    condition: "ml.model_accuracy < 0.85"
+    severity: WARNING
+    action: "alert_data_team"
+    notify: true
+  
+  latency_high:
+    condition: "services.p95_latency > 300"
+    severity: WARNING
+    action: "investigate"
+    notify: false
+  
+  error_rate_high:
+    condition: "services.error_rate > 1.0"
+    severity: CRITICAL
+    action: "trigger_rollback"
+    notify: true
+    escalate: true
+  
+  uptime_low:
+    condition: "services.uptime < 99"
+    severity: WARNING
+    action: "investigate"
+    notify: true
+
+# Notification Channels
+notifications:
+  email:
+    enabled: true
+    recipients:
+      - romanchaa997@gmail.com
+  
+  slack:
+    enabled: false
+    webhook_url: null
+    channel: "#alerts"
+  
+  github_issues:
+    enabled: true
+    label: "alert"
+    assignee: "romanchaa997"
+
+# Alert Aggregation
+aggregation:
+  window_minutes: 5
+  deduplicate: true
+  min_occurrences: 1
+
+# Escalation Rules
+escalation:
+  critical_after_minutes: 15
+  double_notify: true
+  incident_threshold: 3
