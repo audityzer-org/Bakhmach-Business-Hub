@@ -1,0 +1,269 @@
+# PostgreSQL Configuration for Bakhmach-Business-Hub
+# Purpose: Core data store for businesses, orders, energy metrics, users
+# Security: SSL/TLS, password auth, encrypted sensitive columns
+# Performance: Connection pooling, replication, automated backups
+
+postgresql:
+  # Database Server
+  server:
+    version: '15.2'
+    port: 5432
+    max_connections: 200
+    shared_buffers: '256MB'
+    effective_cache_size: '1GB'
+    maintenance_work_mem: '64MB'
+    checkpoint_completion_target: 0.9
+    wal_buffers: '16MB'
+    default_statistics_target: 100
+    random_page_cost: 1.1
+
+  # Authentication & Security
+  security:
+    ssl_enabled: true
+    ssl_cert_file: '/etc/postgresql/server.crt'
+    ssl_key_file: '/etc/postgresql/server.key'
+    password_encryption: 'scram-sha-256'
+    # Host-based authentication (pg_hba.conf)
+    hba_rules:
+      - type: 'local'
+        database: 'all'
+        user: 'postgres'
+        auth: 'trust'
+      - type: 'host'
+        database: 'bakhmach_db'
+        user: 'bakhmach_user'
+        address: '127.0.0.1/32'
+        auth: 'scram-sha-256'
+      - type: 'host'
+        database: 'bakhmach_db'
+        user: 'orchestrator'
+        address: '127.0.0.1/32'
+        auth: 'scram-sha-256'
+
+  # Users & Roles
+  users:
+    - name: 'bakhmach_user'
+      password: '${BAKHMACH_DB_PASSWORD}'  # From env vars
+      permissions:
+        - 'CONNECT bakhmach_db'
+        - 'USAGE ON SCHEMA public'
+        - 'CREATE ON SCHEMA public'
+      description: 'Application user for business data'
+    
+    - name: 'orchestrator'
+      password: '${ORCHESTRATOR_DB_PASSWORD}'
+      permissions:
+        - 'CONNECT bakhmach_db'
+        - 'SELECT, INSERT, UPDATE ON ALL TABLES'
+      description: 'Orchestrator service user'
+    
+    - name: 'prometheus_exporter'
+      password: '${PROMETHEUS_DB_PASSWORD}'
+      permissions:
+        - 'CONNECT bakhmach_db'
+        - 'SELECT ON metrics_*'
+      description: 'Read-only for Prometheus metrics export'
+
+  # Databases
+  databases:
+    - name: 'bakhmach_db'
+      owner: 'bakhmach_user'
+      encoding: 'UTF8'
+      lc_collate: 'C.UTF-8'
+      lc_ctype: 'C.UTF-8'
+      template: 'template0'
+      # Extensions
+      extensions:
+        - 'pgcrypto'         # Encryption functions
+        - 'uuid-ossp'        # UUID generation
+        - 'pg_stat_statements'  # Query stats
+        - 'pg_trgm'          # Trigram search
+        - 'postgis'          # Geospatial (if needed)
+
+  # Replication (for HA)
+  replication:
+    enabled: true
+    wal_level: 'replica'
+    max_wal_senders: 3
+    max_replication_slots: 3
+    wal_keep_size: '1GB'
+    synchronous_commit: 'remote_apply'
+    # Standby/Replica servers
+    standbys:
+      - name: 'standby-1'
+        host: 'postgres-standby.internal'
+        port: 5432
+        priority: 1
+
+  # Backup & WAL
+  backup:
+    enabled: true
+    method: 'pg_basebackup'  # Binary backup
+    schedule: 'daily 03:00'   # Daily at 3 AM UTC
+    retention_days: 30
+    backup_path: '/var/lib/postgresql/backups'
+    wal_archiving: true
+    wal_archive_cmd: 'cp %p /mnt/backup/wal_archive/%f'  # Archive WAL logs
+    # Point-in-time recovery
+    pitr_enabled: true
+    pitr_retention_days: 7
+
+  # Monitoring & Logging
+  logging:
+    log_min_duration_statement: 1000  # Log queries >1s
+    log_connections: true
+    log_disconnections: true
+    log_statement: 'ddl'  # Log CREATE/ALTER/DROP
+    log_directory: '/var/log/postgresql'
+    log_rotation_age: '1d'
+    log_rotation_size: '100MB'
+
+  # Performance Monitoring
+  monitoring:
+    enable_pg_stat_statements: true
+    shared_preload_libraries:
+      - 'pg_stat_statements'
+      - 'auto_explain'
+    auto_explain_log_min_duration: 5000  # Log plans >5s
+
+# === DOCKER SETUP ===
+docker:
+  image: 'postgres:15.2-alpine'
+  container_name: 'bakhmach-postgres'
+  restart_policy: 'unless-stopped'
+  environment:
+    POSTGRES_USER: 'postgres'
+    POSTGRES_PASSWORD: '${POSTGRES_ROOT_PASSWORD}'
+    POSTGRES_INITDB_ARGS: '-c shared_buffers=256MB -c effective_cache_size=1GB'
+  volumes:
+    - 'postgres-data:/var/lib/postgresql/data'
+    - './postgresql.conf:/etc/postgresql/postgresql.conf:ro'
+    - './pg_hba.conf:/etc/postgresql/pg_hba.conf:ro'
+    - './init-scripts:/docker-entrypoint-initdb.d:ro'
+  ports:
+    - '5432:5432'
+  networks:
+    - 'bakhmach-network'
+  healthcheck:
+    test: ['CMD-SHELL', 'pg_isready -U postgres']
+    interval: 10s
+    timeout: 5s
+    retries: 5
+
+# === DATABASE SCHEMA ===
+schema:
+  # Users & Businesses
+  businesses:
+    fields:
+      - id: UUID PRIMARY KEY
+      - name: VARCHAR(255) NOT NULL
+      - owner_id: UUID REFERENCES users(id)
+      - category: VARCHAR(100)  # restaurant, shop, service, etc
+      - address: TEXT
+      - phone: VARCHAR(20) ENCRYPTED
+      - email: VARCHAR(255) ENCRYPTED
+      - registration_date: TIMESTAMP DEFAULT now()
+      - status: VARCHAR(50)  # active, suspended, deleted
+    indexes:
+      - 'CREATE INDEX idx_businesses_owner ON businesses(owner_id)'
+      - 'CREATE INDEX idx_businesses_status ON businesses(status)'
+      - 'CREATE INDEX idx_businesses_category ON businesses(category)'
+
+  users:
+    fields:
+      - id: UUID PRIMARY KEY DEFAULT gen_random_uuid()
+      - username: VARCHAR(100) UNIQUE NOT NULL
+      - email: VARCHAR(255) UNIQUE ENCRYPTED
+      - password_hash: VARCHAR(255) NOT NULL
+      - first_name: VARCHAR(100)
+      - last_name: VARCHAR(100)
+      - phone: VARCHAR(20) ENCRYPTED
+      - role: VARCHAR(50)  # admin, business_owner, customer
+      - created_at: TIMESTAMP DEFAULT now()
+      - last_login: TIMESTAMP
+    indexes:
+      - 'CREATE INDEX idx_users_email ON users(email)'
+      - 'CREATE INDEX idx_users_role ON users(role)'
+
+  orders:
+    fields:
+      - id: UUID PRIMARY KEY DEFAULT gen_random_uuid()
+      - business_id: UUID REFERENCES businesses(id)
+      - customer_id: UUID REFERENCES users(id)
+      - amount: DECIMAL(10,2) NOT NULL
+      - currency: VARCHAR(3) DEFAULT 'UAH'
+      - status: VARCHAR(50)  # pending, completed, cancelled
+      - created_at: TIMESTAMP DEFAULT now()
+      - updated_at: TIMESTAMP
+      - notes: TEXT
+    indexes:
+      - 'CREATE INDEX idx_orders_business ON orders(business_id)'
+      - 'CREATE INDEX idx_orders_created ON orders(created_at DESC)'
+      - 'CREATE INDEX idx_orders_status ON orders(status)'
+
+  # Energy Metrics (from IoT sensors)
+  energy_consumption:
+    fields:
+      - id: BIGSERIAL PRIMARY KEY
+      - device_id: VARCHAR(100) NOT NULL  # IoT device ID
+      - business_id: UUID REFERENCES businesses(id)
+      - power_watts: DECIMAL(10,2) NOT NULL
+      - voltage: DECIMAL(8,2)
+      - current_amps: DECIMAL(8,3)
+      - frequency: DECIMAL(8,2)  # Hz
+      - timestamp: TIMESTAMP DEFAULT now()
+      - recorded_at: TIMESTAMP  # When sensor recorded
+    indexes:
+      - 'CREATE INDEX idx_energy_business ON energy_consumption(business_id)'
+      - 'CREATE INDEX idx_energy_timestamp ON energy_consumption(recorded_at DESC)'
+      - 'CREATE INDEX idx_energy_device ON energy_consumption(device_id)'
+    partitioning:
+      - 'PARTITION BY RANGE (recorded_at)'  # Monthly partitions
+
+  # Performance Metrics (Business KPIs)
+  business_metrics:
+    fields:
+      - id: UUID PRIMARY KEY DEFAULT gen_random_uuid()
+      - business_id: UUID REFERENCES businesses(id)
+      - metric_date: DATE NOT NULL
+      - total_orders: INTEGER DEFAULT 0
+      - total_revenue: DECIMAL(12,2) DEFAULT 0
+      - avg_order_value: DECIMAL(10,2)
+      - customer_count: INTEGER
+      - energy_cost_uah: DECIMAL(10,2)
+      - profit_margin_percent: DECIMAL(5,2)
+      - created_at: TIMESTAMP DEFAULT now()
+    indexes:
+      - 'CREATE INDEX idx_metrics_business ON business_metrics(business_id, metric_date DESC)'
+
+# === BACKUP STRATEGY ===
+backup_strategy:
+  # Full backup daily
+  - frequency: 'daily'
+    time: '03:00 UTC'
+    retention: '30 days'
+    method: 'pg_basebackup'
+  
+  # WAL archiving continuous
+  - frequency: 'continuous'
+    method: 'wal-archiving'
+    retention: '7 days'
+    destination: '/mnt/backup/wal_archive'
+  
+  # Weekly snapshots
+  - frequency: 'weekly'
+    day: 'Sunday'
+    time: '02:00 UTC'
+    retention: '90 days'
+    method: 'filesystem-snapshot'
+
+# === DISASTER RECOVERY ===
+recovery:
+  # RTO (Recovery Time Objective): <5 minutes
+  rto_minutes: 5
+  # RPO (Recovery Point Objective): <1 minute
+  rpo_minutes: 1
+  # Hot standby for instant failover
+  hot_standby: true
+  automatic_failover: true
+  witness_server: 'postgres-witness.internal'
