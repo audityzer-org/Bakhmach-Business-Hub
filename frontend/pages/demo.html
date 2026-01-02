@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bakhmach Business Hub - Architecture Visualization Demo</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #0f3460 100%);
+      color: #e0e0e0;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .container { max-width: 1200px; margin: 0 auto; }
+    header {
+      text-align: center;
+      padding: 60px 20px;
+      border-bottom: 2px solid #0f9c8a;
+      margin-bottom: 40px;
+    }
+    h1 {
+      font-size: 3em;
+      margin-bottom: 10px;
+      background: linear-gradient(to right, #00d4ff, #0f9c8a);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .tagline { font-size: 1.2em; color: #0f9c8a; margin-bottom: 30px; }
+    .hero {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 40px;
+      margin-bottom: 60px;
+      align-items: center;
+    }
+    .hero-text h2 { font-size: 2em; margin-bottom: 20px; color: #00d4ff; }
+    .hero-text p { line-height: 1.8; margin-bottom: 15px; font-size: 1.05em; }
+    .cta-button {
+      display: inline-block;
+      background: linear-gradient(to right, #00d4ff, #0f9c8a);
+      color: #1a1a2e;
+      padding: 15px 40px;
+      border-radius: 50px;
+      text-decoration: none;
+      font-weight: bold;
+      font-size: 1.1em;
+      transition: transform 0.3s, box-shadow 0.3s;
+      margin-top: 20px;
+    }
+    .cta-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(0, 212, 255, 0.3);
+    }
+    .features {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 30px;
+      margin-bottom: 60px;
+    }
+    .feature-card {
+      background: rgba(15, 52, 96, 0.6);
+      padding: 30px;
+      border-radius: 10px;
+      border-left: 4px solid #0f9c8a;
+      transition: all 0.3s;
+    }
+    .feature-card:hover {
+      background: rgba(15, 52, 96, 0.9);
+      transform: translateY(-5px);
+      border-left-color: #00d4ff;
+    }
+    .feature-card h3 {
+      color: #00d4ff;
+      margin-bottom: 15px;
+      font-size: 1.3em;
+    }
+    .feature-card p { color: #b0b0b0; line-height: 1.6; }
+    .demo-section {
+      background: rgba(15, 52, 96, 0.4);
+      padding: 40px;
+      border-radius: 10px;
+      border: 2px solid #0f9c8a;
+      margin-bottom: 40px;
+    }
+    .demo-section h2 { color: #00d4ff; margin-bottom: 20px; font-size: 1.8em; }
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
+      margin-top: 20px;
+    }
+    .metric {
+      background: rgba(0, 0, 0, 0.3);
+      padding: 20px;
+      border-radius: 8px;
+      text-align: center;
+      border-top: 3px solid #0f9c8a;
+    }
+    .metric-value { font-size: 2em; color: #00d4ff; font-weight: bold; margin-bottom: 5px; }
+    .metric-label { font-size: 0.9em; color: #b0b0b0; }
+    .visualization {
+      background: rgba(0, 0, 0, 0.2);
+      padding: 20px;
+      border-radius: 8px;
+      margin-top: 15px;
+      border: 1px solid #0f9c8a;
+      font-family: monospace;
+      font-size: 0.9em;
+      overflow-x: auto;
+      max-height: 300px;
+      color: #00d4ff;
+    }
+    footer {
+      text-align: center;
+      padding: 40px 20px;
+      border-top: 2px solid #0f9c8a;
+      margin-top: 60px;
+      color: #b0b0b0;
+    }
+    @media (max-width: 768px) {
+      .hero, .features { grid-template-columns: 1fr; }
+      h1 { font-size: 2em; }
+      .metrics-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Bakhmach Business Hub</h1>
+      <p class="tagline">Code That Understands Itself</p>
+      <p style="color: #888; margin-bottom: 20px;">Integrated Platform Cooperative for architecture visualization, code optimization & ML pipelines</p>
+    </header>
+
+    <div class="hero">
+      <div class="hero-text">
+        <h2>Real-Time Architecture Visualization</h2>
+        <p>Transform complex microservices into observable, understandable systems with interactive visualization across web, XR, and PDF.</p>
+        <p>Built on cooperative principles with transparent governance and community-driven development.</p>
+        <a href="#demo" class="cta-button">View Live Demo</a>
+        <a href="#features" class="cta-button" style="margin-left: 10px; background: rgba(0, 212, 255, 0.2); color: #00d4ff; border: 2px solid #00d4ff;">Learn More</a>
+      </div>
+      <div style="text-align: center;">
+        <div style="background: rgba(0, 212, 255, 0.1); padding: 60px 40px; border-radius: 10px; border: 2px solid #0f9c8a;">
+          <div style="font-size: 3em; margin-bottom: 10px;">📊</div>
+          <div style="font-size: 1.2em; color: #0f9c8a;">Architecture Visualization Engine</div>
+          <div style="font-size: 0.9em; color: #888; margin-top: 10px;">D3.js • Babylon.js • Puppeteer</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="features" class="features">
+      <div class="feature-card">
+        <div style="font-size: 2em; margin-bottom: 10px;">🎯</div>
+        <h3>Interactive Graphs</h3>
+        <p>D3.js force-directed graphs with real-time filtering, zoom, and detailed node information. Understand your architecture instantly.</p>
+      </div>
+      <div class="feature-card">
+        <div style="font-size: 2em; margin-bottom: 10px;">🥽</div>
+        <h3>XR/VR Support</h3>
+        <p>Babylon.js 3D visualization for immersive architecture exploration. WebXR-ready for enterprise VR presentations.</p>
+      </div>
+      <div class="feature-card">
+        <div style="font-size: 2em; margin-bottom: 10px;">📄</div>
+        <h3>Multi-Format Export</h3>
+        <p>Generate PDF reports in 5 formats: standard, annotated, dark, minimal, and spreadsheet. Perfect for documentation.</p>
+      </div>
+      <div class="feature-card">
+        <div style="font-size: 2em; margin-bottom: 10px;">⚡</div>
+        <h3>Real-Time Metrics</h3>
+        <p>Live dashboard with health percentages, readiness status, latency measurements, and error tracking.</p>
+      </div>
+      <div class="feature-card">
+        <div style="font-size: 2em; margin-bottom: 10px;">💻</div>
+        <h3>Developer CLI</h3>
+        <p>Command-line tools for instant health checks, validation, metrics analysis, and architecture introspection.</p>
+      </div>
+      <div class="feature-card">
+        <div style="font-size: 2em; margin-bottom: 10px;">🔓</div>
+        <h3>Open Source</h3>
+        <p>Fully transparent, GPL-3.0 licensed. Community-driven development with cooperative governance model.</p>
+      </div>
+    </div>
+
+    <div id="demo" class="demo-section">
+      <h2>Live System Metrics</h2>
+      <p style="color: #888; margin-bottom: 20px;">Real-time architecture health snapshot</p>
+      <div class="metrics-grid">
+        <div class="metric">
+          <div class="metric-value">98.5%</div>
+          <div class="metric-label">Overall Health</div>
+        </div>
+        <div class="metric">
+          <div class="metric-value">5/5</div>
+          <div class="metric-label">Healthy Nodes</div>
+        </div>
+        <div class="metric">
+          <div class="metric-value">45ms</div>
+          <div class="metric-label">Avg Latency</div>
+        </div>
+        <div class="metric">
+          <div class="metric-value">15.2K</div>
+          <div class="metric-label">Requests/Sec</div>
+        </div>
+      </div>
+
+      <div class="visualization">
+[FRONTEND] ──(45ms)──> [API-GATEWAY] ──(12ms)──> [AUTH-SERVICE]
+    │                        │
+    │                        └────(250ms)──> [ML-PIPELINE]
+    │                                             │
+    │                                             v
+    └─────────────────────────────────────────────┘
+                        ↓
+                  [DATABASE]
+                  (5ms latency)
+                  (100% healthy)
+      </div>
+
+      <div style="margin-top: 20px; padding: 15px; background: rgba(0, 212, 255, 0.1); border-left: 3px solid #0f9c8a; border-radius: 5px;">
+        <strong style="color: #00d4ff;">✓ All systems operational</strong>
+        <p style="font-size: 0.9em; color: #888; margin-top: 5px;">Last update: 30 seconds ago • WebSocket: Connected</p>
+      </div>
+    </div>
+
+    <div style="text-align: center; padding: 40px; background: rgba(15, 52, 96, 0.4); border-radius: 10px; margin-bottom: 40px;">
+      <h2 style="color: #00d4ff; margin-bottom: 20px;">Ready to Transform Your Architecture?</h2>
+      <p style="margin-bottom: 20px; color: #b0b0b0;">Join the cooperative revolution. Start free today or schedule an enterprise demo.</p>
+      <div>
+        <a href="https://github.com/romanchaa997/Bakhmach-Business-Hub" class="cta-button">Get Started on GitHub</a>
+        <a href="mailto:sales@bakhmach-hub.dev" class="cta-button" style="margin-left: 10px; background: rgba(15, 200, 138, 0.2); color: #0f9c8a; border: 2px solid #0f9c8a;">Request Enterprise Demo</a>
+      </div>
+    </div>
+
+    <footer>
+      <p><strong>Bakhmach Business Hub v1.0</strong></p>
+      <p style="margin-top: 10px; font-size: 0.9em;">GPL-3.0 License • Cooperative Governance • Community-Driven</p>
+      <p style="margin-top: 10px; font-size: 0.85em;">
+        <a href="#" style="color: #0f9c8a; text-decoration: none;">Documentation</a> •
+        <a href="#" style="color: #0f9c8a; text-decoration: none;">GitHub</a> •
+        <a href="#" style="color: #0f9c8a; text-decoration: none;">Contact</a>
+      </p>
+    </footer>
+  </div>
+</body>
+</html>
