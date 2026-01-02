@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bakhmach Business Hub - Interactive Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/d3@7.8.5/dist/d3.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #0f1419; color: #e0e0e0; }
+        .dashboard { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; padding: 20px; }
+        .widget { background: linear-gradient(135deg, #1a1f2e 0%, #16213e 100%); border: 1px solid #00d4ff; border-radius: 8px; padding: 20px; box-shadow: 0 8px 16px rgba(0,212,255,0.1); }
+        .widget h3 { color: #00d4ff; margin-bottom: 15px; font-size: 16px; }
+        .metric-value { font-size: 32px; font-weight: bold; color: #00d4ff; margin: 10px 0; }
+        .metric-change { font-size: 14px; color: #76ff03; }
+        .metric-change.down { color: #ff3d3d; }
+        .chart-container { position: relative; height: 300px; margin: 15px 0; }
+        .status-indicator { display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: 8px; }
+        .status-indicator.healthy { background: #76ff03; }
+        .status-indicator.warning { background: #ffc107; }
+        .status-indicator.critical { background: #ff3d3d; }
+        .header { grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .header h1 { font-size: 28px; color: #00d4ff; }
+        .refresh-btn { padding: 8px 16px; background: #00d4ff; color: #000; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        .refresh-btn:hover { background: #00f0ff; }
+        .full-width { grid-column: 1 / -1; }
+        .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
+        .kpi-item { background: rgba(0,212,255,0.05); border-left: 3px solid #00d4ff; padding: 15px; border-radius: 5px; }
+        .timeline { position: relative; padding-left: 30px; }
+        .timeline::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 2px; background: #00d4ff; }
+        .timeline-item { position: relative; padding: 10px 0; border-bottom: 1px solid #333; }
+        .timeline-item::before { content: ''; position: absolute; left: -35px; top: 15px; width: 10px; height: 10px; border-radius: 50%; background: #00d4ff; }
+        .footer { grid-column: 1 / -1; text-align: center; padding: 20px; color: #666; border-top: 1px solid #333; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <div class="header">
+            <div>
+                <h1>🃈 Bakhmach Business Hub Dashboard</h1>
+                <p style="font-size: 12px; color: #888; margin-top: 5px;">Real-time metrics and analytics</p>
+            </div>
+            <button class="refresh-btn" onclick="refreshData()">Refresh Data</button>
+        </div>
+
+        <div class="widget full-width">
+            <h3>🎆 Key Performance Indicators</h3>
+            <div class="kpi-grid">
+                <div class="kpi-item">
+                    <div style="font-size: 12px; color: #aaa; margin-bottom: 5px;">Annual Recurring Revenue</div>
+                    <div class="metric-value">$285K</div>
+                    <div class="metric-change">↑ 45% YoY</div>
+                </div>
+                <div class="kpi-item">
+                    <div style="font-size: 12px; color: #aaa; margin-bottom: 5px;">Active Users</div>
+                    <div class="metric-value">8,243</div>
+                    <div class="metric-change">↑ 32% MoM</div>
+                </div>
+                <div class="kpi-item">
+                    <div style="font-size: 12px; color: #aaa; margin-bottom: 5px;">Market Penetration</div>
+                    <div class="metric-value">0.44%</div>
+                    <div class="metric-change">↑ 0.12% QoQ</div>
+                </div>
+                <div class="kpi-item">
+                    <div style="font-size: 12px; color: #aaa; margin-bottom: 5px;">Churn Rate</div>
+                    <div class="metric-value">2.1%</div>
+                    <div class="metric-change down">↓ 0.3% improvement</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="widget">
+            <h3>📈 Revenue Growth</h3>
+            <div class="chart-container">
+                <canvas id="revenueChart"></canvas>
+            </div>
+        </div>
+
+        <div class="widget">
+            <h3>📋 User Acquisition</h3>
+            <div class="chart-container">
+                <canvas id="userChart"></canvas>
+            </div>
+        </div>
+
+        <div class="widget">
+            <h3>💺 User Distribution</h3>
+            <div class="chart-container">
+                <canvas id="distributionChart"></canvas>
+            </div>
+        </div>
+
+        <div class="widget">
+            <h3>💯 Conversion Funnel</h3>
+            <div class="chart-container">
+                <canvas id="funnelChart"></canvas>
+            </div>
+        </div>
+
+        <div class="widget full-width">
+            <h3>퉬 System Health Status</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                <div style="padding: 10px; background: rgba(0,0,0,0.3); border-radius: 5px;">
+                    <span class="status-indicator healthy"></span>
+                    <span>Frontend API</span>
+                    <div style="font-size: 12px; color: #888; margin-left: 20px;">99.99% uptime</div>
+                </div>
+                <div style="padding: 10px; background: rgba(0,0,0,0.3); border-radius: 5px;">
+                    <span class="status-indicator healthy"></span>
+                    <span>Backend Service</span>
+                    <div style="font-size: 12px; color: #888; margin-left: 20px;">99.98% uptime</div>
+                </div>
+                <div style="padding: 10px; background: rgba(0,0,0,0.3); border-radius: 5px;">
+                    <span class="status-indicator healthy"></span>
+                    <span>Database</span>
+                    <div style="font-size: 12px; color: #888; margin-left: 20px;">99.95% uptime</div>
+                </div>
+                <div style="padding: 10px; background: rgba(0,0,0,0.3); border-radius: 5px;">
+                    <span class="status-indicator warning"></span>
+                    <span>ML Pipeline</span>
+                    <div style="font-size: 12px; color: #888; margin-left: 20px;">3 min latency</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="widget full-width">
+            <h3>📆 Recent Activity Timeline</h3>
+            <div class="timeline">
+                <div class="timeline-item">
+                    <strong>New Feature Release</strong>
+                    <div style="font-size: 12px; color: #aaa;">Consciousness Module v2.1 deployed</div>
+                    <div style="font-size: 11px; color: #666; margin-top: 5px;">2 hours ago</div>
+                </div>
+                <div class="timeline-item">
+                    <strong>User Milestone</strong>
+                    <div style="font-size: 12px; color: #aaa;">Reached 8,000+ active users</div>
+                    <div style="font-size: 11px; color: #666; margin-top: 5px;">1 day ago</div>
+                </div>
+                <div class="timeline-item">
+                    <strong>Funding Round</strong>
+                    <div style="font-size: 12px; color: #aaa;">Series A funding announcement</div>
+                    <div style="font-size: 11px; color: #666; margin-top: 5px;">3 days ago</div>
+                </div>
+                <div class="timeline-item">
+                    <strong>Partnership</strong>
+                    <div style="font-size: 12px; color: #aaa;">New integration with enterprise platform</div>
+                    <div style="font-size: 11px; color: #666; margin-top: 5px;">1 week ago</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>Dashboard updates every 5 minutes | Last updated: <span id="updateTime">Just now</span></p>
+            <p style="margin-top: 10px; font-size: 11px;">For questions or feedback, contact: analytics@bakhmach-hub.com</p>
+        </div>
+    </div>
+
+    <script>
+        // Initialize charts
+        const chartConfig = { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#aaa' } } }, scales: { y: { ticks: { color: '#aaa' } }, x: { ticks: { color: '#aaa' } } } };
+
+        const revenueCtx = document.getElementById('revenueChart').getContext('2d');
+        new Chart(revenueCtx, {
+            type: 'line',
+            data: { labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'], datasets: [{ label: 'ARR ($K)', data: [45, 78, 120, 165, 235, 285], borderColor: '#00d4ff', backgroundColor: 'rgba(0, 212, 255, 0.1)', tension: 0.3 }] },
+            options: chartConfig
+        });
+
+        const userCtx = document.getElementById('userChart').getContext('2d');
+        new Chart(userCtx, {
+            type: 'bar',
+            data: { labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'], datasets: [{ label: 'New Users', data: [250, 420, 650, 890, 1200, 1350], backgroundColor: '#76ff03' }] },
+            options: chartConfig
+        });
+
+        const distCtx = document.getElementById('distributionChart').getContext('2d');
+        new Chart(distCtx, {
+            type: 'doughnut',
+            data: { labels: ['Enterprise', 'SMB', 'Startup', 'Individual'], datasets: [{ data: [35, 28, 22, 15], backgroundColor: ['#00d4ff', '#76ff03', '#ffc107', '#ff6b6b'] }] },
+            options: { ...chartConfig, plugins: { ...chartConfig.plugins, legend: { position: 'bottom', labels: { color: '#aaa' } } } }
+        });
+
+        const funnelCtx = document.getElementById('funnelChart').getContext('2d');
+        new Chart(funnelCtx, {
+            type: 'bar',
+            data: { labels: ['Visitors', 'Sign-ups', 'Trial', 'Paid'], datasets: [{ label: 'Users', data: [50000, 12500, 3750, 1500], backgroundColor: '#00d4ff' }] },
+            options: { ...chartConfig, indexAxis: 'y' }
+        });
+
+        function refreshData() {
+            document.getElementById('updateTime').textContent = 'Just now';
+            console.log('Data refreshed at ' + new Date().toLocaleTimeString());
+        }
+
+        setInterval(() => {
+            const now = new Date();
+            const minutes = Math.floor((Date.now() - now.getTime()) / 60000);
+            document.getElementById('updateTime').textContent = minutes > 0 ? minutes + ' minutes ago' : 'Just now';
+        }, 60000);
+    </script>
+</body>
+</html>
