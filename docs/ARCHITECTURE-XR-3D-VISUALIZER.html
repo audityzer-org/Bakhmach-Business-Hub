@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bakhmach Business Hub - XR/3D Architecture Visualizer</title>
+    <script src="https://cdn.jsdelivr.net/npm/babylon@5.0.0/babylon.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/babylonjs-loaders@5.0.0/babylonjs.loaders.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 100%); color: #fff; }
+        #canvas { width: 100%; height: 100vh; display: block; }
+        .controls { position: fixed; top: 20px; left: 20px; background: rgba(0,0,0,0.8); padding: 20px; border-radius: 10px; z-index: 100; font-size: 14px; max-width: 300px; }
+        .controls h3 { margin-bottom: 15px; color: #00d4ff; }
+        .control-btn { display: block; width: 100%; padding: 8px; margin: 5px 0; background: #00d4ff; color: #000; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; transition: all 0.3s; }
+        .control-btn:hover { background: #00f0ff; transform: scale(1.05); }
+        .mode-toggle { margin: 15px 0; }
+        .mode-toggle label { display: inline-block; margin-right: 10px; }
+        .info-panel { position: fixed; bottom: 20px; left: 20px; background: rgba(0,0,0,0.9); padding: 15px; border-radius: 8px; border-left: 4px solid #00d4ff; max-width: 400px; font-size: 12px; }
+        .info-panel h4 { color: #00d4ff; margin-bottom: 10px; }
+        .export-section { position: fixed; top: 20px; right: 20px; background: rgba(0,0,0,0.8); padding: 20px; border-radius: 10px; z-index: 100; }
+        .export-btn { display: block; padding: 10px 20px; margin: 5px 0; background: #ff6b6b; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        .export-btn:hover { background: #ff8787; }
+        .status { position: fixed; bottom: 20px; right: 20px; background: rgba(0,0,0,0.8); padding: 15px; border-radius: 8px; color: #00d4ff; }
+    </style>
+</head>
+<body>
+    <canvas id="renderCanvas"></canvas>
+    
+    <div class="controls">
+        <h3>🎮 XR/3D Controls</h3>
+        <button class="control-btn" onclick="toggleView()">Switch View Mode</button>
+        <button class="control-btn" onclick="resetView()">Reset Camera</button>
+        <button class="control-btn" onclick="toggleAnimation()">Toggle Animation</button>
+        <div class="mode-toggle">
+            <label><input type="radio" name="mode" value="3d" checked onchange="changeMode(this.value)"> 3D</label>
+            <label><input type="radio" name="mode" value="xr" onchange="changeMode(this.value)"> XR Mode</label>
+        </div>
+        <hr style="margin: 15px 0; opacity: 0.3;">
+        <small style="color: #888;">Drag to rotate | Scroll to zoom</small>
+    </div>
+    
+    <div class="export-section">
+        <h3 style="color: #ff6b6b; margin-bottom: 15px;">📤 Export</h3>
+        <button class="export-btn" onclick="exportPDF()">Export as PDF</button>
+        <button class="export-btn" onclick="exportJSON()">Export JSON</button>
+        <button class="export-btn" onclick="captureScreenshot()">Screenshot</button>
+    </div>
+    
+    <div class="info-panel">
+        <h4>ℹ️ Architecture Components</h4>
+        <p><strong>Layers:</strong> Presentation, Application, Data, Infrastructure</p>
+        <p><strong>Core Nodes:</strong> Frontend, Backend, Database, ML Pipeline, Consciousness</p>
+        <p><strong>Microservices:</strong> 7 services for modular architecture</p>
+        <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #444;">
+            <p><strong>Current View:</strong> <span id="viewMode">3D Visualization</span></p>
+            <p><strong>FPS:</strong> <span id="fpsCounter">60</span></p>
+        </div>
+    </div>
+    
+    <div class="status" id="statusDiv">Ready</div>
+
+    <script>
+        // Initialize Babylon.js
+        const canvas = document.getElementById('renderCanvas');
+        const engine = new BABYLON.Engine(canvas, true);
+        let scene = createScene();
+        let animationRunning = true;
+        let currentMode = '3d';
+
+        function createScene() {
+            const scene = new BABYLON.Scene(engine);
+            scene.clearColor = new BABYLON.Color3(0.05, 0.05, 0.15);
+            scene.collisionsEnabled = true;
+
+            // Lighting
+            const light1 = new BABYLON.PointLight('light1', new BABYLON.Vector3(50, 50, 50), scene);
+            light1.intensity = 0.8;
+            light1.range = 200;
+            
+            const light2 = new BABYLON.PointLight('light2', new BABYLON.Vector3(-50, -50, -50), scene);
+            light2.intensity = 0.4;
+            light2.range = 150;
+            
+            const ambientLight = new BABYLON.HemisphericLight('ambientLight', new BABYLON.Vector3(0, 1, 0), scene);
+            ambientLight.intensity = 0.4;
+
+            // Camera
+            const camera = new BABYLON.ArcRotateCamera('camera', BABYLON.Tools.ToRadians(45), BABYLON.Tools.ToRadians(45), 150, new BABYLON.Vector3(0, 0, 0), scene);
+            camera.attachControl(canvas, true);
+            camera.wheelPrecision = 50;
+            camera.panningDistanceLimit = 50;
+            camera.minZ = 0.1;
+            camera.maxZ = 10000;
+
+            // Create architecture components
+            createArchitectureNodes(scene);
+            createConnections(scene);
+            createDataFlows(scene);
+
+            // Render loop
+            engine.runRenderLoop(() => {
+                if (animationRunning) {
+                    rotateNodes(scene);
+                }
+                scene.render();
+                updateFPS();
+            });
+
+            window.addEventListener('resize', () => engine.resize());
+            return scene;
+        }
+
+        function createArchitectureNodes(scene) {
+            const components = [
+                { name: 'Frontend', position: [-40, 0, 0], color: [0, 212, 255], size: 10 },
+                { name: 'Backend', position: [0, 40, 0], color: [255, 107, 107], size: 12 },
+                { name: 'Database', position: [40, 0, 0], color: [76, 175, 80], size: 11 },
+                { name: 'ML Pipeline', position: [0, -40, 0], color: [255, 193, 7], size: 10 },
+                { name: 'Consciousness', position: [0, 0, 40], color: [156, 39, 176], size: 13 }
+            ];
+
+            components.forEach((comp, idx) => {
+                // Create main sphere
+                const sphere = BABYLON.MeshBuilder.CreateSphere(comp.name, 32, comp.size, scene);
+                sphere.position = new BABYLON.Vector3(...comp.position);
+                
+                // Material with glow layer
+                const material = new BABYLON.StandardMaterial(`mat_${idx}`, scene);
+                const color = BABYLON.Color3.FromArray([comp.color[0]/255, comp.color[1]/255, comp.color[2]/255]);
+                material.emissiveColor = color;
+                material.alpha = 0.8;
+                sphere.material = material;
+
+                // Add metadata
+                sphere.metadata = { name: comp.name, type: 'node' };
+                
+                // Create label
+                const textPlane = BABYLON.MeshBuilder.CreateGround(comp.name + '_label', 20, 5, 1, scene);
+                textPlane.position = sphere.position.clone();
+                textPlane.position.y -= comp.size + 10;
+                textPlane.isPickable = false;
+            });
+        }
+
+        function createConnections(scene) {
+            const connections = [
+                { from: 0, to: 1 }, { from: 1, to: 2 }, { from: 2, to: 3 },
+                { from: 3, to: 0 }, { from: 4, to: 0 }, { from: 4, to: 1 }
+            ];
+
+            const nodes = scene.meshes.filter(m => m.metadata && m.metadata.type === 'node');
+            
+            connections.forEach(conn => {
+                const fromNode = nodes[conn.from];
+                const toNode = nodes[conn.to];
+                
+                const line = BABYLON.MeshBuilder.CreateTube(`connection_${conn.from}_${conn.to}`, {
+                    path: [fromNode.position, toNode.position],
+                    radius: 1,
+                    cap: BABYLON.Mesh.CAP_ALL,
+                    updatable: false,
+                    sideOrientation: BABYLON.Mesh.FRONTSIDE
+                }, scene);
+                
+                const lineMat = new BABYLON.StandardMaterial(`lineMat_${conn.from}_${conn.to}`, scene);
+                lineMat.emissiveColor = new BABYLON.Color3(0, 1, 1);
+                lineMat.alpha = 0.5;
+                line.material = lineMat;
+            });
+        }
+
+        function createDataFlows(scene) {
+            // Placeholder for animated data flow visualization
+        }
+
+        function rotateNodes(scene) {
+            scene.meshes.forEach((mesh, idx) => {
+                if (mesh.metadata && mesh.metadata.type === 'node') {
+                    mesh.rotation.x += 0.001 * (idx % 2 === 0 ? 1 : -1);
+                    mesh.rotation.y += 0.002;
+                }
+            });
+        }
+
+        function toggleAnimation() {
+            animationRunning = !animationRunning;
+            updateStatus(`Animation ${animationRunning ? 'enabled' : 'disabled'}`);
+        }
+
+        function toggleView() {
+            const view = document.getElementById('viewMode');
+            view.textContent = view.textContent === '3D Visualization' ? '2D Diagram' : '3D Visualization';
+        }
+
+        function resetView() {
+            const camera = scene.activeCamera;
+            camera.position = new BABYLON.Vector3(0, 0, 150);
+            updateStatus('Camera reset');
+        }
+
+        function changeMode(mode) {
+            currentMode = mode;
+            updateStatus(`Mode: ${mode.toUpperCase()}`);
+        }
+
+        function exportPDF() {
+            const element = document.querySelector('.info-panel');
+            const opt = { margin: 10, filename: 'architecture-visualization.pdf', image: { type: 'png', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { orientation: 'landscape', unit: 'mm', format: 'a4' } };
+            html2pdf().set(opt).from(element).save();
+            updateStatus('PDF export initiated');
+        }
+
+        function exportJSON() {
+            const data = { version: '1.0', mode: currentMode, timestamp: new Date().toISOString(), components: scene.meshes.filter(m => m.metadata).map(m => ({ name: m.metadata.name, position: m.position })) };
+            const json = JSON.stringify(data, null, 2);
+            const blob = new Blob([json], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'architecture-data.json';
+            a.click();
+            updateStatus('JSON exported');
+        }
+
+        function captureScreenshot() {
+            BABYLON.Tools.CreateScreenshot(engine, camera, 1920, 1080);
+            updateStatus('Screenshot captured');
+        }
+
+        function updateFPS() {
+            document.getElementById('fpsCounter').textContent = Math.round(engine.getFps()).toString();
+        }
+
+        function updateStatus(msg) {
+            document.getElementById('statusDiv').textContent = msg;
+            setTimeout(() => {
+                document.getElementById('statusDiv').textContent = 'Ready';
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
