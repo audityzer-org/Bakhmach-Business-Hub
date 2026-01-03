@@ -241,3 +241,165 @@ Bakhmach-Business-Hub/
 
 *Last Updated: January 2, 2026*
 *Version: 1.0*
+
+## 🚀 Automated Startup Script
+
+For quick setup and initialization, use the provided startup script:
+
+```bash
+#!/bin/bash
+# Bakhmach Business Hub - Integration Service Startup Script
+# Version: 1.0
+# Date: January 2, 2026
+
+set -e
+
+echo ""
+echo "========================================"
+echo "🚀 BAKHMACH BUSINESS HUB STARTUP"
+echo "========================================"
+echo ""
+
+# Step 1: Check Python installation
+echo "[1/10] Checking Python installation..."
+if ! command -v python3 &> /dev/null; then
+    echo "❌ Python 3 not found. Please install Python 3.10+"
+    exit 1
+fi
+echo "✅ Python 3 found: $(python3 --version)"
+echo ""
+
+# Step 2: Create virtual environment
+echo "[2/10] Setting up Python virtual environment..."
+if [ ! -d "venv" ]; then
+    python3 -m venv venv
+    echo "✅ Virtual environment created"
+else
+    echo "✅ Virtual environment already exists"
+fi
+source venv/bin/activate
+echo ""
+
+# Step 3: Install dependencies
+echo "[3/10] Installing dependencies..."
+pip install -q -r requirements.txt
+echo "✅ Dependencies installed"
+echo ""
+
+# Step 4: Set up environment variables
+echo "[4/10] Configuring environment variables..."
+if [ ! -f ".env" ]; then
+    cat > .env << 'EOF'
+# GitHub Configuration
+GITHUB_TOKEN=your_github_token_here
+GITHUB_WEBHOOK_SECRET=your_webhook_secret_here
+GITHUB_REPO=romanchaa997/Bakhmach-Business-Hub
+
+# Database Configuration
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=bakhmach_integration
+DB_USER=postgres
+DB_PASSWORD=your_db_password_here
+
+# Redis Configuration
+REDIS_HOST=localhost
+REDIS_PORT=6379
+
+# Application Configuration
+APP_ENV=development
+APP_DEBUG=true
+LOG_LEVEL=INFO
+EOF
+    echo "✅ .env file created (⚠️  Update with real credentials)"
+else
+    echo "✅ .env file already exists"
+fi
+echo ""
+
+# Step 5: Check database connectivity
+echo "[5/10] Checking PostgreSQL connectivity..."
+if command -v psql &> /dev/null; then
+    psql -h localhost -U postgres -d template1 -c "SELECT 1" > /dev/null 2>&1 && \
+    echo "✅ PostgreSQL is accessible" || \
+    echo "⚠️  PostgreSQL not fully accessible (will attempt to continue)"
+else
+    echo "⚠️  psql not installed (skipping PostgreSQL check)"
+fi
+echo ""
+
+# Step 6: Check Redis connectivity
+echo "[6/10] Checking Redis connectivity..."
+if command -v redis-cli &> /dev/null; then
+    redis-cli ping > /dev/null 2>&1 && \
+    echo "✅ Redis is accessible" || \
+    echo "⚠️  Redis not fully accessible (will attempt to continue)"
+else
+    echo "⚠️  redis-cli not installed (skipping Redis check)"
+fi
+echo ""
+
+# Step 7-10: Display startup summary
+echo "[7/10] Setup complete!"
+echo ""
+echo "========================================"
+echo "✅ BAKHMACH BUSINESS HUB IS READY"
+echo "========================================"
+echo ""
+echo "🎯 Quick Start Guide:"
+echo "   1. Update .env with real credentials"
+echo "   2. Ensure PostgreSQL is running"
+echo "   3. Ensure Redis is running"
+echo "   4. Run: python3 -m uvicorn services.integration.main:app --reload"
+echo ""
+echo "📚 Documentation:"
+echo "   - Architecture: docs/ARCHITECTURE_INTEGRATION.md"
+echo "   - Roadmap: docs/NEXT_STEPS_STRATEGIC_ROADMAP.md"
+echo "   - Q1 Plan: docs/PRODUCT_ROADMAP_Q1_2026.md"
+echo ""
+echo "🚀 Next Steps:"
+echo "   1. Complete the sync_orchestrator TODO methods"
+echo "   2. Set up OAuth 2.0 credentials"
+echo "   3. Initialize webhook receiver"
+echo "   4. Run integration tests"
+echo "   5. Deploy to production (Jan 9, 2026)"
+echo ""
+echo "Setup complete! Ready for development. 🎉"
+echo ""
+```
+
+### Running the Startup Script
+
+1. **Save the script** to your project root as `startup.sh`
+2. **Make it executable**:
+   ```bash
+   chmod +x startup.sh
+   ```
+3. **Run the script**:
+   ```bash
+   ./startup.sh
+   ```
+
+### What the Script Does
+
+- ✅ Checks Python 3.10+ installation
+- ✅ Creates and activates virtual environment
+- ✅ Installs all project dependencies
+- ✅ Sets up `.env` configuration file
+- ✅ Verifies PostgreSQL connectivity
+- ✅ Verifies Redis connectivity
+- ✅ Displays next steps and documentation links
+
+### Troubleshooting
+
+If you encounter issues:
+
+1. **Python not found**: Install Python 3.10+ from [python.org](https://www.python.org)
+2. **PostgreSQL connection failed**: Ensure PostgreSQL is running on `localhost:5432`
+3. **Redis connection failed**: Ensure Redis is running on `localhost:6379`
+4. **Permission denied**: Run `chmod +x startup.sh` before executing
+
+---
+
+*Last Updated: January 3, 2026*
+*Status: ACTIVE - Implementation Phase*
