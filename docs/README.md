@@ -8,6 +8,30 @@ This directory contains all essential documentation for the Bakhmach Business Hu
 
 ---
 
+## 🤗 Value, Governance & Meta-Architecture
+
+Start here if you want to understand **how all parts of the hub connect into one value system** (стратегія, витрати, інновації, дані):
+
+- 🦧 **[META-FRAMEWORK.md](./META-FRAMEWORK.md)** – Meta‑рамка для всього Bakhmach Business Hub
+  - How value is defined: financial, strategic, community, R&D, data
+  - How TBM-style cost mapping links cloud, edge, ML, IoT та інфраструктуру
+  - How initiatives are prioritized with a weighted scoring model
+  - How R&D / quantum / experimental напрями вимірюються через innovation accounting
+  - How data & ML/IoT assets are treated as reusable value units
+
+- 🛐 **Пов'язані документи (plug‑ins до Meta‑рамки):**
+  - Cloud & Infrastructure Cost Layer:  
+    `CLOUD_INTEGRATION_GUIDE.md`, `AWS_SETUP.md`, `MULTI_CLOUD_HYBRID_ARCHITECTURE.md`, `PARALLEL_DEPLOYMENT_SUMMARY.md`
+  - Product & Strategy Layer:  
+    `INVESTOR-PITCH.md`, `NEXT_STEPS_STRATEGIC_ROADMAP.md`, `PRESENTATION.md`
+  - Operations, Monitoring & Quality Layer:  
+    `MONITORING-OBSERVABILITY.md`, `SCALING-PERFORMANCE.md`, `TEST-SUITE.md`, `SECURITY-COMPLIANCE-STANDARDS.md`
+  - XR / Visualization & Web3 Extensions:  
+    `ARCHITECTURE-VISUALIZER.html`, `ARCHITECTURE-XR-3D-VISUALIZER.html`, `XR-AR-IMPLEMENTATION.md`, `WEB3_IPFS_BLOCKCHAIN.md`
+
+
+---
+
 ## 🎯 Quick Navigation by Audience
 
 ### For Investors & Business Leaders
